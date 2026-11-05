@@ -1,0 +1,319 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "🌿 Indicadores de Salud Ambiental (Amazonía)",
+      "type": "row"
+    },
+    {
+      "datasource": "PostgreSQL-Amazonia",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 35 },
+              { "color": "red", "value": 45 }
+            ]
+          },
+          "unit": "celsius"
+        }
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 1 },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "format": "time_series",
+          "rawSql": "SELECT ts as time, valor as value FROM lectura WHERE sensor = 'temperatura' ORDER BY ts DESC LIMIT 50;",
+          "refId": "A"
+        }
+      ],
+      "title": "Temperatura Actual (°C)",
+      "type": "stat"
+    },
+    {
+      "datasource": "PostgreSQL-Amazonia",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "green", "value": 75 }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 1 },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "targets": [
+        {
+          "format": "time_series",
+          "rawSql": "SELECT ts as time, valor as value FROM lectura WHERE sensor = 'humedad' ORDER BY ts DESC LIMIT 50;",
+          "refId": "A"
+        }
+      ],
+      "title": "Humedad Relativa (%)",
+      "type": "stat"
+    },
+    {
+      "datasource": "PostgreSQL-Amazonia",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 15 },
+              { "color": "red", "value": 50 }
+            ]
+          },
+          "unit": "µg/m³"
+        }
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 1 },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "targets": [
+        {
+          "format": "time_series",
+          "rawSql": "SELECT ts as time, valor as value FROM lectura WHERE sensor = 'pm25' ORDER BY ts DESC LIMIT 50;",
+          "refId": "A"
+        }
+      ],
+      "title": "Calidad del Aire PM2.5 (µg/m³)",
+      "type": "stat"
+    },
+    {
+      "datasource": "PostgreSQL-Amazonia",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 600 },
+              { "color": "red", "value": 1000 }
+            ]
+          },
+          "unit": "ppm"
+        }
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 1 },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "targets": [
+        {
+          "format": "time_series",
+          "rawSql": "SELECT ts as time, valor as value FROM lectura WHERE sensor = 'co2' ORDER BY ts DESC LIMIT 50;",
+          "refId": "A"
+        }
+      ],
+      "title": "Dióxido de Carbono (CO₂ ppm)",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
+      "id": 101,
+      "title": "📡 Resiliencia y Rendimiento de Conectividad Intermitente",
+      "type": "row"
+    },
+    {
+      "datasource": "PostgreSQL-Amazonia",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "green" },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 7 },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) as total_recibidos FROM lectura;",
+          "refId": "A"
+        }
+      ],
+      "title": "Total de Registros Ingestados (Cero Pérdida)",
+      "type": "stat"
+    },
+    {
+      "datasource": "PostgreSQL-Amazonia",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 7 },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "rawSql": "SELECT (COUNT(*) - COUNT(DISTINCT id)) as duplicados FROM lectura;",
+          "refId": "A"
+        }
+      ],
+      "title": "Registros Duplicados (Meta = 0)",
+      "type": "stat"
+    },
+    {
+      "datasource": "PostgreSQL-Amazonia",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 7 },
+      "id": 7,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) as alertas_priorizadas FROM lectura WHERE es_alerta = 1;",
+          "refId": "A"
+        }
+      ],
+      "title": "Alertas Críticas Priorizadas",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 11 },
+      "id": 102,
+      "title": "📈 Series Temporales y Agregación Horaria (ETL)",
+      "type": "row"
+    },
+    {
+      "datasource": "PostgreSQL-Amazonia",
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth" }
+        }
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 12 },
+      "id": 8,
+      "targets": [
+        {
+          "format": "time_series",
+          "rawSql": "SELECT hora_utc as time, valor_promedio as temp_promedio, valor_max as temp_max FROM lectura_hora WHERE sensor = 'temperatura' ORDER BY hora_utc ASC;",
+          "refId": "A"
+        }
+      ],
+      "title": "Perfil Horario de Temperatura (°C)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "PostgreSQL-Amazonia",
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth" }
+        }
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 12 },
+      "id": 9,
+      "targets": [
+        {
+          "format": "time_series",
+          "rawSql": "SELECT hora_utc as time, valor_promedio as pm25_promedio, valor_max as pm25_max FROM lectura_hora WHERE sensor = 'pm25' ORDER BY hora_utc ASC;",
+          "refId": "A"
+        }
+      ],
+      "title": "Perfil Horario de PM2.5 (µg/m³)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["amazonia", "iot", "store-and-forward", "unad", "planetai"],
+  "time": { "from": "now-6h", "to": "now" },
+  "timezone": "browser",
+  "title": "Amazonía: Monitoreo Ambiental & Resiliencia IoT (ETR ZAO)",
+  "uid": "amazonia-etr-zao"
+}

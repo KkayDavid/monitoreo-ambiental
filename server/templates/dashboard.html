@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ETR ZAO | Tablero de Monitoreo Ambiental Amazonía</title>
+  <!-- Tailwind CSS & Chart.js via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    .gauge-glow { box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  
+  <!-- Encabezado -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-emerald-900/50">
+          🌿
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-lg font-bold tracking-tight text-white">ETR ZAO — Amazonía</h1>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">PlanetAI & UNAD</span>
+          </div>
+          <p class="text-xs text-slate-400">Monitoreo Ambiental con Conectividad Intermitente (Store-and-Forward)</p>
+        </div>
+      </div>
+
+      <!-- Estado del Enlace y Controles -->
+      <div class="flex items-center space-x-2 text-xs">
+        <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="conn-status" class="text-slate-300 font-medium">Enlace: Sincronizado</span>
+        </div>
+        <button onclick="abrirModalThingSpeak()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition flex items-center space-x-1 shadow-sm shadow-indigo-950">
+          <span>📥 Importar ThingSpeak</span>
+        </button>
+        <button onclick="simularDatos(false)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+          ⚡ +5 Simulado
+        </button>
+        <button onclick="simularDatos(true)" class="px-3 py-1.5 rounded-lg bg-rose-600/80 hover:bg-rose-500 text-white font-medium transition">
+          🔥 Simular Fuego
+        </button>
+        <button id="btn-refresh" onclick="cargarTodo()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition flex items-center space-x-1">
+          <span>🔄 Actualizar</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+    <!-- Fila 1: KPIs Ambientales e Índices -->
+    <section>
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400">Índices y Estado Ambiental</h2>
+        <span class="text-xs text-slate-500">Nodo: <strong class="text-slate-300">nodo-rio-negro-01</strong></span>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        
+        <!-- Temperatura -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
+          <div class="flex justify-between items-start">
+            <span class="text-xs text-slate-400 font-medium">Temperatura</span>
+            <span class="text-lg">🌡️</span>
+          </div>
+          <div class="my-2">
+            <div class="text-2xl font-bold text-white"><span id="kpi-temp-avg">--</span>°C</div>
+            <div class="text-xs text-slate-400">Pico Máx: <span id="kpi-temp-max" class="text-rose-400 font-semibold">--</span>°C</div>
+          </div>
+          <div class="text-[11px] text-slate-500">Normal tropical: 24 - 34°C</div>
+        </div>
+
+        <!-- Humedad -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
+          <div class="flex justify-between items-start">
+            <span class="text-xs text-slate-400 font-medium">Humedad Relativa</span>
+            <span class="text-lg">💧</span>
+          </div>
+          <div class="my-2">
+            <div class="text-2xl font-bold text-cyan-400"><span id="kpi-hum-avg">--</span>%</div>
+            <div class="text-xs text-slate-400">Dosel de selva húmeda</div>
+          </div>
+          <div class="text-[11px] text-slate-500">Rango óptimo: > 70%</div>
+        </div>
+
+        <!-- Calidad del Aire (PM2.5) -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
+          <div class="flex justify-between items-start">
+            <span class="text-xs text-slate-400 font-medium">Calidad de Aire (PM2.5)</span>
+            <span class="text-lg">💨</span>
+          </div>
+          <div class="my-2">
+            <div class="text-2xl font-bold text-white"><span id="kpi-pm25-avg">--</span> <span class="text-xs font-normal text-slate-400">µg/m³</span></div>
+            <div id="badge-aqi" class="inline-block mt-1 text-[11px] px-2 py-0.5 rounded-full font-medium bg-emerald-500/20 text-emerald-300">
+              Cargando...
+            </div>
+          </div>
+          <div class="text-[11px] text-slate-500">Pico máx: <span id="kpi-pm25-max" class="text-amber-400">--</span> µg/m³</div>
+        </div>
+
+        <!-- CO2 -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
+          <div class="flex justify-between items-start">
+            <span class="text-xs text-slate-400 font-medium">Dióxido de Carbono (CO₂)</span>
+            <span class="text-lg">🍃</span>
+          </div>
+          <div class="my-2">
+            <div class="text-2xl font-bold text-emerald-400"><span id="kpi-co2-avg">--</span> <span class="text-xs font-normal text-slate-400">ppm</span></div>
+            <div class="text-xs text-slate-400">Sumidero de carbono activo</div>
+          </div>
+          <div class="text-[11px] text-slate-500">Línea base: 400 - 550 ppm</div>
+        </div>
+
+        <!-- Riesgo de Incendio -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
+          <div class="flex justify-between items-start">
+            <span class="text-xs text-slate-400 font-medium">Riesgo Incendio (FWI)</span>
+            <span class="text-lg">🔥</span>
+          </div>
+          <div class="my-2">
+            <div id="kpi-fire-risk" class="text-xl font-bold text-rose-400">--</div>
+            <div id="kpi-fire-desc" class="text-xs text-slate-400">Análisis multivariante</div>
+          </div>
+          <div class="text-[11px] text-slate-500">Alerta temprana de fuego</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Fila 2: KPIs de Resiliencia IoT (Store-and-Forward) -->
+    <section>
+      <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-3">KPIs de Resiliencia IoT & Sincronización</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
+          <div class="text-xs text-slate-400">Tasa de Integridad de Datos</div>
+          <div class="text-2xl font-bold text-emerald-400 mt-1">100.0%</div>
+          <div class="text-xs text-emerald-500/90 mt-1">✓ 0% pérdida durante cortes</div>
+        </div>
+
+        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
+          <div class="text-xs text-slate-400">Idempotencia (Anti-Duplicados)</div>
+          <div class="text-2xl font-bold text-cyan-400 mt-1">0 Duplicados</div>
+          <div class="text-xs text-cyan-500/90 mt-1">✓ ON CONFLICT DO NOTHING</div>
+        </div>
+
+        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
+          <div class="text-xs text-slate-400">Eficiencia Ancho de Banda</div>
+          <div class="text-2xl font-bold text-indigo-400 mt-1">~78.5% Ahorro</div>
+          <div class="text-xs text-indigo-400/90 mt-1">✓ Compresión GZIP por lotes</div>
+        </div>
+
+        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
+          <div class="text-xs text-slate-400">Total Lecturas & Alertas Prioritarias</div>
+          <div class="text-2xl font-bold text-white mt-1">
+            <span id="kpi-total-lecturas">--</span>
+            <span class="text-xs font-normal text-amber-400">(<span id="kpi-total-alertas">--</span> alertas)</span>
+          </div>
+          <div class="text-xs text-slate-400 mt-1">Edge SQLite → Servidor Central</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Fila 3: Gráficos de Series Temporales -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <!-- Gráfico 1: Temp & Humedad -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <h3 class="text-sm font-semibold text-white">Evolución de Temperatura y Humedad</h3>
+            <p class="text-xs text-slate-400">Eje dual sincronizado con marcas UTC</p>
+          </div>
+          <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400">Tiempo Real</span>
+        </div>
+        <div class="h-64">
+          <canvas id="chart-temp-hum"></canvas>
+        </div>
+      </div>
+
+      <!-- Gráfico 2: PM2.5 & CO2 -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <h3 class="text-sm font-semibold text-white">Calidad del Aire: PM2.5 y CO₂</h3>
+            <p class="text-xs text-slate-400">Detección de conflagraciones y quemas de biomasa</p>
+          </div>
+          <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400">Partículas & Gases</span>
+        </div>
+        <div class="h-64">
+          <canvas id="chart-pm25-co2"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Fila 4: Alertas Críticas Priorizadas -->
+    <section class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h3 class="text-sm font-semibold text-white">Registro de Alertas Críticas Enviadas de Forma Prioritaria</h3>
+          <p class="text-xs text-slate-400">Eventos procesados al inicio de la cola local durante reconexión</p>
+        </div>
+        <span class="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium">Prioridad Alta</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead>
+            <tr class="border-b border-slate-800 text-slate-400 uppercase tracking-wider">
+              <th class="py-2 px-3">Timestamp (UTC)</th>
+              <th class="py-2 px-3">Nodo Edge</th>
+              <th class="py-2 px-3">Sensor</th>
+              <th class="py-2 px-3">Valor Registrado</th>
+              <th class="py-2 px-3">Severidad</th>
+              <th class="py-2 px-3">Manejo en Red Intermitente</th>
+            </tr>
+          </thead>
+          <tbody id="table-alertas-body" class="divide-y divide-slate-800/60 text-slate-300">
+            <tr>
+              <td colspan="6" class="py-4 text-center text-slate-500">Cargando alertas...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="border-t border-slate-800 mt-12 py-6 text-center text-xs text-slate-500">
+    ETR ZAO — Sistema de Monitoreo Ambiental en Borde • PlanetAI Nature Space Foundation & UNAD
+  </footer>
+
+  <!-- Modal para Importar ThingSpeak JSON -->
+  <div id="modal-thingspeak" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      
+      <!-- Cabecera del Modal -->
+      <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/50">
+        <div>
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <span>📥</span> Importar JSON de ThingSpeak (Sensores Físicos)
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">
+            Pega el JSON de tu canal o sube el archivo para organizar y graficar las lecturas automáticamente.
+          </p>
+        </div>
+        <button onclick="cerrarModalThingSpeak()" class="text-slate-400 hover:text-white text-lg px-2 py-1 rounded-lg hover:bg-slate-800 transition">
+          ✕
+        </button>
+      </div>
+
+      <!-- Cuerpo del Modal -->
+      <div class="p-6 space-y-4 overflow-y-auto">
+        <!-- Barra de Herramientas -->
+        <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div class="flex items-center gap-2">
+            <button onclick="cargarEjemploThingSpeak()" class="px-3 py-1.5 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/40 font-medium transition flex items-center gap-1">
+              <span>📋</span> Cargar Ejemplo de ThingSpeak
+            </button>
+            <label class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 cursor-pointer font-medium transition flex items-center gap-1">
+              <span>📁</span> Subir archivo .json
+              <input type="file" id="file-thingspeak" accept=".json" class="hidden" onchange="cargarArchivoJSON(event)">
+            </label>
+          </div>
+          <button onclick="limpiarJSONInput()" class="text-slate-400 hover:text-slate-200 transition">
+            🧹 Limpiar
+          </button>
+        </div>
+
+        <!-- Área de Texto para el JSON -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+            JSON de ThingSpeak (Channel + Feeds)
+          </label>
+          <textarea id="thingspeak-json-input" rows="12" 
+            placeholder='Pega aquí el JSON exportado de ThingSpeak. Ejemplo:&#10;{&#10;  "channel": { "id": 12345, "name": "Estacion-Amazonia-01", "field1": "Temperatura", "field2": "Humedad", "field3": "PM2.5" },&#10;  "feeds": [&#10;    { "created_at": "2026-11-04T08:00:00Z", "field1": "28.5", "field2": "82.1", "field3": "14.5" }&#10;  ]&#10;}'
+            class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 font-mono text-xs text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition resize-y"></textarea>
+        </div>
+
+        <!-- Mensaje de Estado / Resultado -->
+        <div id="import-status-box" class="hidden p-3.5 rounded-xl text-xs"></div>
+      </div>
+
+      <!-- Pie del Modal -->
+      <div class="px-6 py-3.5 border-t border-slate-800 flex justify-between items-center bg-slate-900/80">
+        <span class="text-[11px] text-slate-500">Mapeo automático de campos (field1=Temp, field2=Hum, field3=PM2.5, field4=CO₂)</span>
+        <div class="flex items-center gap-2">
+          <button onclick="cerrarModalThingSpeak()" class="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white transition">
+            Cancelar
+          </button>
+          <button id="btn-procesar-ts" onclick="procesarThingSpeakJSON()" class="px-5 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-950 transition flex items-center gap-1.5">
+            <span>🚀</span> Procesar y Visualizar
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Lógica JavaScript del Tablero -->
+  <script>
+    let chartTempHum = null;
+    let chartPM25CO2 = null;
+
+    async function cargarKPIs() {
+      try {
+        const res = await fetch('/api/v1/kpis');
+        if (!res.ok) return;
+        const data = await res.json();
+        const amb = data.ambientales;
+        const iot = data.resiliencia_iot;
+
+        document.getElementById('kpi-temp-avg').textContent = amb.temperatura_promedio;
+        document.getElementById('kpi-temp-max').textContent = amb.temperatura_max;
+        document.getElementById('kpi-hum-avg').textContent = amb.humedad_promedio;
+        document.getElementById('kpi-pm25-avg').textContent = amb.pm25_promedio;
+        document.getElementById('kpi-pm25-max').textContent = amb.pm25_max;
+        document.getElementById('kpi-co2-avg').textContent = amb.co2_promedio;
+
+        // Badge AQI
+        const badgeAQI = document.getElementById('badge-aqi');
+        badgeAQI.textContent = `${amb.aqi_nivel}: ${amb.aqi_descripcion}`;
+        if (amb.aqi_nivel === 'ALTO') {
+          badgeAQI.className = "inline-block mt-1 text-[11px] px-2 py-0.5 rounded-full font-medium bg-rose-500/20 text-rose-300 border border-rose-500/30";
+        } else if (amb.aqi_nivel === 'MODERADO') {
+          badgeAQI.className = "inline-block mt-1 text-[11px] px-2 py-0.5 rounded-full font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30";
+        } else {
+          badgeAQI.className = "inline-block mt-1 text-[11px] px-2 py-0.5 rounded-full font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+        }
+
+        // Riesgo Incendio
+        const fireRisk = document.getElementById('kpi-fire-risk');
+        fireRisk.textContent = amb.riesgo_incendio;
+        if (amb.riesgo_incendio === 'CRÍTICO') {
+          fireRisk.className = "text-xl font-bold text-rose-400 animate-pulse";
+          document.getElementById('kpi-fire-desc').textContent = "Pico térmico o quema detectada";
+        } else if (amb.riesgo_incendio === 'MODERADO') {
+          fireRisk.className = "text-xl font-bold text-amber-400";
+          document.getElementById('kpi-fire-desc').textContent = "Precaución por calor/humo";
+        } else {
+          fireRisk.className = "text-xl font-bold text-emerald-400";
+          document.getElementById('kpi-fire-desc').textContent = "Condición selvática normal";
+        }
+
+        // Resiliencia
+        document.getElementById('kpi-total-lecturas').textContent = iot.total_lecturas_ingestadas;
+        document.getElementById('kpi-total-alertas').textContent = iot.alertas_priorizadas;
+        document.getElementById('conn-status').textContent = `Enlace: ${iot.estado_enlace}`;
+      } catch (e) {
+        console.error("Error al cargar KPIs:", e);
+      }
+    }
+
+    async function cargarSeriesTemporales() {
+      try {
+        const res = await fetch('/api/v1/timeseries');
+        if (!res.ok) return;
+        const series = await res.json();
+
+        const formatLabels = (items) => items.map(d => d.ts ? d.ts.substring(11, 19) : '');
+
+        // Gráfico 1: Temp & Humedad
+        const tempLabels = formatLabels(series.temperatura);
+        const tempData = series.temperatura.map(d => d.valor);
+        const humData = series.humedad.map(d => d.valor);
+
+        if (!chartTempHum) {
+          const ctx1 = document.getElementById('chart-temp-hum').getContext('2d');
+          chartTempHum = new Chart(ctx1, {
+            type: 'line',
+            data: {
+              labels: tempLabels,
+              datasets: [
+                {
+                  label: 'Temperatura (°C)',
+                  data: tempData,
+                  borderColor: '#f43f5e',
+                  backgroundColor: 'rgba(244, 63, 94, 0.1)',
+                  yAxisID: 'yTemp',
+                  tension: 0.3,
+                  borderWidth: 2,
+                  pointRadius: 3
+                },
+                {
+                  label: 'Humedad (%)',
+                  data: humData,
+                  borderColor: '#06b6d4',
+                  backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                  yAxisID: 'yHum',
+                  tension: 0.3,
+                  borderWidth: 2,
+                  pointRadius: 3
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { labels: { color: '#94a3b8' } } },
+              scales: {
+                x: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } },
+                yTemp: {
+                  type: 'linear',
+                  position: 'left',
+                  ticks: { color: '#f43f5e' },
+                  grid: { color: '#1e293b' },
+                  title: { display: true, text: '°C', color: '#f43f5e' }
+                },
+                yHum: {
+                  type: 'linear',
+                  position: 'right',
+                  ticks: { color: '#06b6d4' },
+                  grid: { drawOnChartArea: false },
+                  title: { display: true, text: '%', color: '#06b6d4' }
+                }
+              }
+            }
+          });
+        } else {
+          chartTempHum.data.labels = tempLabels;
+          chartTempHum.data.datasets[0].data = tempData;
+          chartTempHum.data.datasets[1].data = humData;
+          chartTempHum.update();
+        }
+
+        // Gráfico 2: PM2.5 y CO2
+        const pm25Labels = formatLabels(series.pm25);
+        const pm25Data = series.pm25.map(d => d.valor);
+        const co2Data = series.co2.map(d => d.valor);
+
+        if (!chartPM25CO2) {
+          const ctx2 = document.getElementById('chart-pm25-co2').getContext('2d');
+          chartPM25CO2 = new Chart(ctx2, {
+            type: 'line',
+            data: {
+              labels: pm25Labels,
+              datasets: [
+                {
+                  label: 'PM2.5 (µg/m³)',
+                  data: pm25Data,
+                  borderColor: '#fbbf24',
+                  backgroundColor: 'rgba(251, 191, 36, 0.15)',
+                  yAxisID: 'yPM',
+                  tension: 0.3,
+                  borderWidth: 2,
+                  pointRadius: 3
+                },
+                {
+                  label: 'CO₂ (ppm)',
+                  data: co2Data,
+                  borderColor: '#10b981',
+                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                  yAxisID: 'yCO2',
+                  tension: 0.3,
+                  borderWidth: 2,
+                  pointRadius: 3
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { labels: { color: '#94a3b8' } } },
+              scales: {
+                x: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } },
+                yPM: {
+                  type: 'linear',
+                  position: 'left',
+                  ticks: { color: '#fbbf24' },
+                  grid: { color: '#1e293b' },
+                  title: { display: true, text: 'µg/m³', color: '#fbbf24' }
+                },
+                yCO2: {
+                  type: 'linear',
+                  position: 'right',
+                  ticks: { color: '#10b981' },
+                  grid: { drawOnChartArea: false },
+                  title: { display: true, text: 'ppm', color: '#10b981' }
+                }
+              }
+            }
+          });
+        } else {
+          chartPM25CO2.data.labels = pm25Labels;
+          chartPM25CO2.data.datasets[0].data = pm25Data;
+          chartPM25CO2.data.datasets[1].data = co2Data;
+          chartPM25CO2.update();
+        }
+
+      } catch (e) {
+        console.error("Error al cargar series:", e);
+      }
+    }
+
+    async function cargarAlertas() {
+      try {
+        const res = await fetch('/api/v1/alerts');
+        if (!res.ok) return;
+        const alertas = await res.json();
+        const tbody = document.getElementById('table-alertas-body');
+        
+        if (!alertas || alertas.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="py-4 text-center text-slate-500">No se registran alertas críticas pendientes. Parámetros normales.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = alertas.map(a => `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="py-2.5 px-3 font-mono text-slate-300">${a.ts}</td>
+            <td class="py-2.5 px-3 text-emerald-400 font-medium">${a.nodo_id}</td>
+            <td class="py-2.5 px-3 uppercase font-semibold text-slate-200">${a.sensor}</td>
+            <td class="py-2.5 px-3 font-bold ${a.sensor === 'temperatura' ? 'text-rose-400' : 'text-amber-400'}">${a.valor} ${a.sensor === 'temperatura' ? '°C' : 'µg/m³'}</td>
+            <td class="py-2.5 px-3">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                CRÍTICO
+              </span>
+            </td>
+            <td class="py-2.5 px-3 text-slate-400 text-[11px]">Enviado con prioridad al reconectar</td>
+          </tr>
+        `).join('');
+
+      } catch (e) {
+        console.error("Error al cargar alertas:", e);
+      }
+    }
+
+    async function simularDatos(conAlerta = false) {
+      try {
+        await fetch(`/api/v1/simulate?con_alerta=${conAlerta}&cantidad=5`, { method: 'POST' });
+        cargarTodo();
+      } catch (e) {
+        console.error("Error al simular:", e);
+      }
+    }
+
+    // Funciones del Modal de ThingSpeak
+    function abrirModalThingSpeak() {
+      document.getElementById('modal-thingspeak').classList.remove('hidden');
+    }
+
+    function cerrarModalThingSpeak() {
+      document.getElementById('modal-thingspeak').classList.add('hidden');
+      document.getElementById('import-status-box').classList.add('hidden');
+    }
+
+    function limpiarJSONInput() {
+      document.getElementById('thingspeak-json-input').value = '';
+      document.getElementById('import-status-box').classList.add('hidden');
+    }
+
+    function cargarArchivoJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('thingspeak-json-input').value = e.target.result;
+      };
+      reader.readAsText(file);
+    }
+
+    function cargarEjemploThingSpeak() {
+      const now = new Date();
+      const isoAt = (minsAgo) => new Date(now.getTime() - minsAgo * 60000).toISOString();
+
+      const ejemplo = {
+        "channel": {
+          "id": 984521,
+          "name": "Estacion-Fisica-Amazonia-Sur",
+          "description": "Nodo físico con ESP32 y sensores BME280 + PMS5003 + SCD30",
+          "latitude": "-3.1019",
+          "longitude": "-60.0250",
+          "field1": "Temperatura",
+          "field2": "Humedad",
+          "field3": "PM2.5",
+          "field4": "CO2"
+        },
+        "feeds": [
+          { "entry_id": 101, "created_at": isoAt(50), "field1": "27.4", "field2": "86.5", "field3": "12.3", "field4": "425.0" },
+          { "entry_id": 102, "created_at": isoAt(40), "field1": "28.1", "field2": "84.2", "field3": "15.0", "field4": "435.0" },
+          { "entry_id": 103, "created_at": isoAt(30), "field1": "29.8", "field2": "81.0", "field3": "18.4", "field4": "448.0" },
+          { "entry_id": 104, "created_at": isoAt(20), "field1": "51.8", "field2": "58.2", "field3": "165.2", "field4": "590.0" },
+          { "entry_id": 105, "created_at": isoAt(10), "field1": "47.3", "field2": "62.0", "field3": "135.0", "field4": "550.0" },
+          { "entry_id": 106, "created_at": isoAt(2),  "field1": "31.2", "field2": "76.4", "field3": "24.5", "field4": "460.0" }
+        ]
+      };
+
+      document.getElementById('thingspeak-json-input').value = JSON.stringify(ejemplo, null, 2);
+    }
+
+    async function procesarThingSpeakJSON() {
+      const input = document.getElementById('thingspeak-json-input').value.trim();
+      const statusBox = document.getElementById('import-status-box');
+      const btn = document.getElementById('btn-procesar-ts');
+
+      if (!input) {
+        statusBox.className = "p-3.5 rounded-xl text-xs bg-rose-500/20 text-rose-300 border border-rose-500/30";
+        statusBox.innerHTML = "⚠️ Por favor pega o carga un JSON de ThingSpeak antes de continuar.";
+        statusBox.classList.remove('hidden');
+        return;
+      }
+
+      let parsedPayload;
+      try {
+        parsedPayload = JSON.parse(input);
+      } catch (err) {
+        statusBox.className = "p-3.5 rounded-xl text-xs bg-rose-500/20 text-rose-300 border border-rose-500/30";
+        statusBox.innerHTML = `⚠️ Sintaxis JSON inválida: ${err.message}`;
+        statusBox.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = `<span>⏳</span> Procesando...`;
+
+      try {
+        const res = await fetch('/api/v1/import/thingspeak', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(parsedPayload)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.detail || "Error en el servidor al procesar el JSON.");
+        }
+
+        statusBox.className = "p-3.5 rounded-xl text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 space-y-1";
+        statusBox.innerHTML = `
+          <div class="font-bold flex items-center gap-1.5">
+            <span>✅</span> ${data.mensaje}
+          </div>
+          <div class="text-slate-300 text-[11px]">
+            • <strong>Canal/Nodo:</strong> ${data.canal} <br>
+            • <strong>Lecturas generadas:</strong> ${data.lecturas_generadas} registros <br>
+            • <strong>Alertas críticas detectadas:</strong> ${data.alertas_detectadas} <br>
+            • <strong>Total acumulado en servidor:</strong> ${data.total_en_servidor} registros
+          </div>
+        `;
+        statusBox.classList.remove('hidden');
+
+        // Actualizar automáticamente los gráficos y KPIs
+        cargarTodo();
+
+        // Opcional: auto-cerrar tras 2.2 segundos para mostrar el dashboard limpio
+        setTimeout(() => {
+          cerrarModalThingSpeak();
+        }, 2200);
+
+      } catch (error) {
+        statusBox.className = "p-3.5 rounded-xl text-xs bg-rose-500/20 text-rose-300 border border-rose-500/30";
+        statusBox.innerHTML = `❌ Error: ${error.message}`;
+        statusBox.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>🚀</span> Procesar y Visualizar`;
+      }
+    }
+
+    function cargarTodo() {
+      cargarKPIs();
+      cargarSeriesTemporales();
+      cargarAlertas();
+    }
+
+    // Carga inicial y auto-refresco cada 5 segundos
+    window.addEventListener('DOMContentLoaded', () => {
+      cargarTodo();
+      setInterval(cargarTodo, 5000);
+    });
+  </script>
+</body>
+</html>
