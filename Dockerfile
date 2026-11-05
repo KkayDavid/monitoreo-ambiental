@@ -14,10 +14,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar código fuente
 COPY . .
 
-# Crear usuario sin privilegios (buenas prácticas de seguridad)
+# Crear usuario sin privilegios
 RUN useradd -m appuser && chown -R appuser /app
 USER appuser
 
 EXPOSE 8000 8080
 
-CMD ["sh", "-c", "python -m uvicorn server.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["python", "run.py"]
