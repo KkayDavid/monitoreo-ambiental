@@ -19,11 +19,10 @@
     <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
       <div class="flex items-center space-x-3">
         <div class="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-emerald-900/50">
-          🌿
         </div>
         <div>
           <div class="flex items-center space-x-2">
-            <h1 class="text-lg font-bold tracking-tight text-white">ETR ZAO — Amazonía</h1>
+            <h1 class="text-lg font-bold tracking-tight text-white">Tablero de Monitoreo Ambiental Amazonía</h1>
           </div>
           <p class="text-xs text-slate-400">Monitoreo Ambiental con Conectividad Intermitente (Store-and-Forward)</p>
         </div>
@@ -36,16 +35,16 @@
           <span id="conn-status" class="text-slate-300 font-medium">Enlace: Sincronizado</span>
         </div>
         <button onclick="abrirModalThingSpeak()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition flex items-center space-x-1 shadow-sm shadow-indigo-950">
-          <span>📥 Importar ThingSpeak</span>
+          <span>Importar ThingSpeak</span>
         </button>
         <button onclick="simularDatos(false)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
-          ⚡ +5 Simulado
+           +5 Simulado
         </button>
         <button onclick="simularDatos(true)" class="px-3 py-1.5 rounded-lg bg-rose-600/80 hover:bg-rose-500 text-white font-medium transition">
-          🔥 Simular Fuego
+           Simular Fuego
         </button>
         <button id="btn-refresh" onclick="cargarTodo()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition flex items-center space-x-1">
-          <span>🔄 Actualizar</span>
+          <span>Actualizar</span>
         </button>
       </div>
     </div>
@@ -65,7 +64,7 @@
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
           <div class="flex justify-between items-start">
             <span class="text-xs text-slate-400 font-medium">Temperatura</span>
-            <span class="text-lg">🌡️</span>
+            <span class="text-lg"></span>
           </div>
           <div class="my-2">
             <div class="text-2xl font-bold text-white"><span id="kpi-temp-avg">--</span>°C</div>
@@ -78,7 +77,7 @@
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
           <div class="flex justify-between items-start">
             <span class="text-xs text-slate-400 font-medium">Humedad Relativa</span>
-            <span class="text-lg">💧</span>
+            <span class="text-lg"></span>
           </div>
           <div class="my-2">
             <div class="text-2xl font-bold text-cyan-400"><span id="kpi-hum-avg">--</span>%</div>
@@ -106,7 +105,7 @@
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
           <div class="flex justify-between items-start">
             <span class="text-xs text-slate-400 font-medium">Dióxido de Carbono (CO₂)</span>
-            <span class="text-lg">🍃</span>
+            <span class="text-lg"></span>
           </div>
           <div class="my-2">
             <div class="text-2xl font-bold text-emerald-400"><span id="kpi-co2-avg">--</span> <span class="text-xs font-normal text-slate-400">ppm</span></div>
@@ -119,7 +118,7 @@
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
           <div class="flex justify-between items-start">
             <span class="text-xs text-slate-400 font-medium">Riesgo Incendio (FWI)</span>
-            <span class="text-lg">🔥</span>
+            <span class="text-lg"></span>
           </div>
           <div class="my-2">
             <div id="kpi-fire-risk" class="text-xl font-bold text-rose-400">--</div>
@@ -244,7 +243,7 @@
       <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/50">
         <div>
           <h3 class="text-base font-bold text-white flex items-center gap-2">
-            <span>📥</span> Importar JSON de ThingSpeak (Sensores Físicos)
+            <span></span> Importar JSON de ThingSpeak (Sensores Físicos)
           </h3>
           <p class="text-xs text-slate-400 mt-0.5">
             Pega el JSON de tu canal o sube el archivo para organizar y graficar las lecturas automáticamente.
@@ -261,15 +260,15 @@
         <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
           <div class="flex items-center gap-2">
             <button onclick="cargarEjemploThingSpeak()" class="px-3 py-1.5 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/40 font-medium transition flex items-center gap-1">
-              <span>📋</span> Cargar Ejemplo de ThingSpeak
+              <span></span> Cargar Ejemplo de ThingSpeak
             </button>
             <label class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 cursor-pointer font-medium transition flex items-center gap-1">
-              <span>📁</span> Subir archivo .json
+              <span></span> Subir archivo .json
               <input type="file" id="file-thingspeak" accept=".json" class="hidden" onchange="cargarArchivoJSON(event)">
             </label>
           </div>
           <button onclick="limpiarJSONInput()" class="text-slate-400 hover:text-slate-200 transition">
-            🧹 Limpiar
+             Limpiar
           </button>
         </div>
 
@@ -295,7 +294,7 @@
             Cancelar
           </button>
           <button id="btn-procesar-ts" onclick="procesarThingSpeakJSON()" class="px-5 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-950 transition flex items-center gap-1.5">
-            <span>🚀</span> Procesar y Visualizar
+            <span></span> Procesar y Visualizar
           </button>
         </div>
       </div>
@@ -600,7 +599,7 @@
 
       if (!input) {
         statusBox.className = "p-3.5 rounded-xl text-xs bg-rose-500/20 text-rose-300 border border-rose-500/30";
-        statusBox.innerHTML = "⚠️ Por favor pega o carga un JSON de ThingSpeak antes de continuar.";
+        statusBox.innerHTML = " Por favor pega o carga un JSON de ThingSpeak antes de continuar.";
         statusBox.classList.remove('hidden');
         return;
       }
@@ -610,13 +609,13 @@
         parsedPayload = JSON.parse(input);
       } catch (err) {
         statusBox.className = "p-3.5 rounded-xl text-xs bg-rose-500/20 text-rose-300 border border-rose-500/30";
-        statusBox.innerHTML = `⚠️ Sintaxis JSON inválida: ${err.message}`;
+        statusBox.innerHTML = ` Sintaxis JSON inválida: ${err.message}`;
         statusBox.classList.remove('hidden');
         return;
       }
 
       btn.disabled = true;
-      btn.innerHTML = `<span>⏳</span> Procesando...`;
+      btn.innerHTML = `<span></span> Procesando...`;
 
       try {
         const res = await fetch('/api/v1/import/thingspeak', {
@@ -634,7 +633,7 @@
         statusBox.className = "p-3.5 rounded-xl text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 space-y-1";
         statusBox.innerHTML = `
           <div class="font-bold flex items-center gap-1.5">
-            <span>✅</span> ${data.mensaje}
+            <span></span> ${data.mensaje}
           </div>
           <div class="text-slate-300 text-[11px]">
             • <strong>Canal/Nodo:</strong> ${data.canal} <br>
@@ -655,11 +654,11 @@
 
       } catch (error) {
         statusBox.className = "p-3.5 rounded-xl text-xs bg-rose-500/20 text-rose-300 border border-rose-500/30";
-        statusBox.innerHTML = `❌ Error: ${error.message}`;
+        statusBox.innerHTML = ` Error: ${error.message}`;
         statusBox.classList.remove('hidden');
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<span>🚀</span> Procesar y Visualizar`;
+        btn.innerHTML = `<span></span> Procesar y Visualizar`;
       }
     }
 
